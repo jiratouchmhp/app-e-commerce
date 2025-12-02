@@ -3,6 +3,7 @@ export interface WishlistItem {
   productId: string
   name: string
   slug: string
+  /** Price in cents */
   price: number
   image: string
   stock: number

@@ -41,8 +41,6 @@ export function WishlistItemCard({ item }: WishlistItemCardProps) {
     return null
   }
 
-  const priceInCents = Math.round(item.price * 100)
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -78,7 +76,7 @@ export function WishlistItemCard({ item }: WishlistItemCardProps) {
             {item.name}
           </h3>
         </Link>
-        <p className="mb-4 text-lg font-bold">{formatPrice(priceInCents)}</p>
+        <p className="mb-4 text-lg font-bold">{formatPrice(item.price)}</p>
 
         {/* Actions */}
         <div className="flex gap-2">

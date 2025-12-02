@@ -8,7 +8,7 @@ describe('WishlistItem type', () => {
       productId: 'product-123',
       name: 'Test Product',
       slug: 'test-product',
-      price: 19.99,
+      price: 1999, // Price in cents
       image: 'https://example.com/image.jpg',
       stock: 10,
       category: {
@@ -23,7 +23,7 @@ describe('WishlistItem type', () => {
     expect(item.productId).toBe('product-123')
     expect(item.name).toBe('Test Product')
     expect(item.slug).toBe('test-product')
-    expect(item.price).toBe(19.99)
+    expect(item.price).toBe(1999) // $19.99 in cents
     expect(item.image).toBe('https://example.com/image.jpg')
     expect(item.stock).toBe(10)
     expect(item.category.id).toBe('category-123')
@@ -65,7 +65,7 @@ describe('WishlistResult type', () => {
           productId: 'product-123',
           name: 'Test Product',
           slug: 'test-product',
-          price: 19.99,
+          price: 1999, // Price in cents
           image: 'https://example.com/image.jpg',
           stock: 10,
           category: {
@@ -108,7 +108,7 @@ describe('WishlistResult type', () => {
   it('handles multiple items in the wishlist', () => {
     const baseItem: Omit<WishlistItem, 'id' | 'productId' | 'name'> = {
       slug: 'test-product',
-      price: 19.99,
+      price: 1999, // Price in cents
       image: 'https://example.com/image.jpg',
       stock: 10,
       category: {

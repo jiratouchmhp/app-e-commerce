@@ -120,8 +120,6 @@ function SavedItemCard({ item }: SavedItemCardProps) {
     return null
   }
 
-  const priceInCents = Math.round(item.price * 100)
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -151,7 +149,7 @@ function SavedItemCard({ item }: SavedItemCardProps) {
           {/* Content */}
           <div className="p-3">
             <h3 className="mb-1 truncate text-sm font-medium">{item.name}</h3>
-            <p className="mb-2 text-sm font-bold">{formatPrice(priceInCents)}</p>
+            <p className="mb-2 text-sm font-bold">{formatPrice(item.price)}</p>
 
             <Button
               onClick={handleMoveToCart}

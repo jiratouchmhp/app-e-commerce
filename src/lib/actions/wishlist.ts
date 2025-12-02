@@ -94,7 +94,7 @@ export async function getWishlist() {
       productId: item.productId,
       name: item.product.name,
       slug: item.product.slug,
-      price: Number(item.product.price),
+      price: Math.round(Number(item.product.price) * 100), // Convert to cents
       image: item.product.images[0] || '/placeholder.jpg',
       stock: item.product.stock,
       category: item.product.category,
@@ -218,22 +218,18 @@ export async function removeFromWishlist(productId: string) {
     const userId = session?.user?.id
 
     if (userId) {
-      await prisma.wishlistItem.delete({
+      await prisma.wishlistItem.deleteMany({
         where: {
-          userId_productId: {
-            userId,
-            productId: validated.productId,
-          },
+          userId,
+          productId: validated.productId,
         },
       })
     } else {
       const guestToken = getOrCreateGuestToken()
-      await prisma.wishlistItem.delete({
+      await prisma.wishlistItem.deleteMany({
         where: {
-          guestToken_productId: {
-            guestToken,
-            productId: validated.productId,
-          },
+          guestToken,
+          productId: validated.productId,
         },
       })
     }
