@@ -39,6 +39,21 @@ export default async function AccountPage() {
           </CardContent>
         </Card>
 
+        {/* Wishlist */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Wishlist</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4 text-sm text-muted-foreground">
+              View and manage your saved items
+            </p>
+            <Button asChild className="w-full">
+              <Link href="/account/wishlist">View Wishlist</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Profile */}
         <Card>
           <CardHeader>

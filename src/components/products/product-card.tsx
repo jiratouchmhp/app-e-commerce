@@ -6,17 +6,20 @@ import { motion } from 'framer-motion'
 import { Heart, ShoppingCart } from 'lucide-react'
 import type { ProductWithCategory } from '@/types/product'
 import { formatPrice } from '@/lib/utils'
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
+import { toggleWishlist } from '@/lib/actions/wishlist'
 
 interface ProductCardProps {
   product: ProductWithCategory
+  initialIsInWishlist?: boolean
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, initialIsInWishlist = false }: ProductCardProps) {
   const priceInCents = Number(product.price) * 100
-  const [isFavorite, setIsFavorite] = useState(false)
+  const [isFavorite, setIsFavorite] = useState(initialIsInWishlist)
   const [isAdding, setIsAdding] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   const handleQuickAdd = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -31,7 +34,20 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsFavorite(!isFavorite)
+    
+    // Store previous state before optimistic update
+    const previousState = isFavorite
+    
+    // Optimistically update the UI
+    setIsFavorite(!previousState)
+    
+    startTransition(async () => {
+      const result = await toggleWishlist(product.id)
+      if (!result.success) {
+        // Revert on failure
+        setIsFavorite(previousState)
+      }
+    })
   }
 
   return (
@@ -96,7 +112,8 @@ export function ProductCard({ product }: ProductCardProps) {
           {/* Favorite Button */}
           <motion.button
             onClick={handleToggleFavorite}
-            className="absolute right-3 top-3 z-10 rounded-full bg-white/90 p-2 backdrop-blur-sm transition-colors hover:bg-white"
+            disabled={isPending}
+            className="absolute right-3 top-3 z-10 rounded-full bg-white/90 p-2 backdrop-blur-sm transition-colors hover:bg-white disabled:opacity-50"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
           >
