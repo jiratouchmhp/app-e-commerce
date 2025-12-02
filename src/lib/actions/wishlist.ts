@@ -325,12 +325,11 @@ export async function moveToCart(productId: string, quantity: number = 1) {
           quantity: newQuantity,
         },
       }),
-      prisma.wishlistItem.delete({
+      // Use deleteMany to avoid errors if item doesn't exist
+      prisma.wishlistItem.deleteMany({
         where: {
-          userId_productId: {
-            userId,
-            productId: validated.productId,
-          },
+          userId,
+          productId: validated.productId,
         },
       }),
     ])
@@ -367,24 +366,26 @@ export async function mergeGuestWishlist() {
       select: { productId: true },
     })
 
-    // Merge guest items into user wishlist
-    for (const item of guestItems) {
-      await prisma.wishlistItem.upsert({
-        where: {
-          userId_productId: {
+    // Merge guest items into user wishlist in parallel
+    await Promise.all(
+      guestItems.map((item) =>
+        prisma.wishlistItem.upsert({
+          where: {
+            userId_productId: {
+              userId: session.user.id,
+              productId: item.productId,
+            },
+          },
+          create: {
             userId: session.user.id,
             productId: item.productId,
           },
-        },
-        create: {
-          userId: session.user.id,
-          productId: item.productId,
-        },
-        update: {
-          updatedAt: new Date(),
-        },
-      })
-    }
+          update: {
+            updatedAt: new Date(),
+          },
+        })
+      )
+    )
 
     // Delete guest wishlist items
     await prisma.wishlistItem.deleteMany({

@@ -35,14 +35,17 @@ export function ProductCard({ product, initialIsInWishlist = false }: ProductCar
     e.preventDefault()
     e.stopPropagation()
     
+    // Store previous state before optimistic update
+    const previousState = isFavorite
+    
     // Optimistically update the UI
-    setIsFavorite(!isFavorite)
+    setIsFavorite(!previousState)
     
     startTransition(async () => {
       const result = await toggleWishlist(product.id)
       if (!result.success) {
         // Revert on failure
-        setIsFavorite(isFavorite)
+        setIsFavorite(previousState)
       }
     })
   }

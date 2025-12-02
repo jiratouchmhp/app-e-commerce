@@ -41,7 +41,7 @@ export function WishlistItemCard({ item }: WishlistItemCardProps) {
     return null
   }
 
-  const priceInCents = item.price * 100
+  const priceInCents = Math.round(item.price * 100)
 
   return (
     <motion.div

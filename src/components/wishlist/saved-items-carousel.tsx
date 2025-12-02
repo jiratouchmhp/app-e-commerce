@@ -120,7 +120,7 @@ function SavedItemCard({ item }: SavedItemCardProps) {
     return null
   }
 
-  const priceInCents = item.price * 100
+  const priceInCents = Math.round(item.price * 100)
 
   return (
     <motion.div
