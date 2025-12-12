@@ -69,6 +69,11 @@ export async function getProducts(
         where,
         include: {
           category: true,
+          _count: {
+            select: {
+              reviews: true,
+            },
+          },
         },
         orderBy,
         take: validatedFilters.pageSize,
@@ -77,8 +82,29 @@ export async function getProducts(
       prisma.product.count({ where }),
     ])
 
+    // Calculate average rating for each product
+    const productsWithReviewStats = await Promise.all(
+      products.map(async (product) => {
+        const reviews = await prisma.review.findMany({
+          where: { productId: product.id },
+          select: { rating: true },
+        })
+        
+        const averageRating = reviews.length > 0
+          ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+          : 0
+
+        return {
+          ...product,
+          reviewStats: {
+            averageRating: Math.round(averageRating * 10) / 10,
+          },
+        }
+      })
+    )
+
     return {
-      products: products as ProductWithCategory[],
+      products: productsWithReviewStats as ProductWithCategory[],
       total,
       page: validatedFilters.page,
       pageSize: validatedFilters.pageSize,
@@ -109,10 +135,32 @@ export async function getProduct(
       },
       include: {
         category: true,
+        _count: {
+          select: {
+            reviews: true,
+          },
+        },
       },
     })
 
-    return product as ProductWithCategory | null
+    if (!product) return null
+
+    // Calculate average rating
+    const reviews = await prisma.review.findMany({
+      where: { productId: product.id },
+      select: { rating: true },
+    })
+
+    const averageRating = reviews.length > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      : 0
+
+    return {
+      ...product,
+      reviewStats: {
+        averageRating: Math.round(averageRating * 10) / 10,
+      },
+    } as ProductWithCategory
   } catch (error) {
     console.error('Get product error:', error)
     return null
@@ -151,6 +199,11 @@ export async function getRelatedProducts(
       },
       include: {
         category: true,
+        _count: {
+          select: {
+            reviews: true,
+          },
+        },
       },
       take: limit,
       orderBy: {
@@ -158,7 +211,28 @@ export async function getRelatedProducts(
       },
     })
 
-    return products as ProductWithCategory[]
+    // Calculate average rating for each product
+    const productsWithReviewStats = await Promise.all(
+      products.map(async (product) => {
+        const reviews = await prisma.review.findMany({
+          where: { productId: product.id },
+          select: { rating: true },
+        })
+        
+        const averageRating = reviews.length > 0
+          ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+          : 0
+
+        return {
+          ...product,
+          reviewStats: {
+            averageRating: Math.round(averageRating * 10) / 10,
+          },
+        }
+      })
+    )
+
+    return productsWithReviewStats as ProductWithCategory[]
   } catch (error) {
     console.error('Get related products error:', error)
     return []
