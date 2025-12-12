@@ -4,6 +4,12 @@ export type { Product, Category }
 
 export interface ProductWithCategory extends Product {
   category: Category
+  _count?: {
+    reviews: number
+  }
+  reviewStats?: {
+    averageRating: number
+  }
 }
 
 export interface ProductFilters {

@@ -9,6 +9,7 @@ import { formatPrice } from '@/lib/utils'
 import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { toggleWishlist } from '@/lib/actions/wishlist'
+import { StarRating } from '@/components/reviews/star-rating'
 
 interface ProductCardProps {
   product: ProductWithCategory
@@ -145,6 +146,19 @@ export function ProductCard({ product, initialIsInWishlist = false }: ProductCar
           <h3 className="mb-2 line-clamp-2 font-semibold transition-colors group-hover:text-primary">
             {product.name}
           </h3>
+          
+          {/* Rating */}
+          {product.reviewStats && product.reviewStats.averageRating > 0 && (
+            <div className="mb-2 flex items-center gap-2">
+              <StarRating rating={product.reviewStats.averageRating} size="sm" showValue />
+              {product._count && product._count.reviews > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  ({product._count.reviews})
+                </span>
+              )}
+            </div>
+          )}
+          
           <div className="flex items-center justify-between">
             <motion.p 
               className="text-lg font-bold"
