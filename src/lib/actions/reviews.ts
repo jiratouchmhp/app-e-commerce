@@ -34,23 +34,14 @@ export async function getProductReviews(
     }
 
     // Build orderBy clause
-    let orderBy: any = { createdAt: 'desc' }
-    switch (validatedFilters.sortBy) {
-      case 'highest':
-        orderBy = { rating: 'desc' }
-        break
-      case 'lowest':
-        orderBy = { rating: 'asc' }
-        break
-      case 'helpful':
-        // Sort by helpful votes count - for now fallback to newest
-        // Note: Sorting by votes count requires a more complex query
-        orderBy = { createdAt: 'desc' }
-        break
-      case 'newest':
-      default:
-        orderBy = { createdAt: 'desc' }
+    const orderByOptions = {
+      highest: { rating: 'desc' as const },
+      lowest: { rating: 'asc' as const },
+      helpful: { createdAt: 'desc' as const }, // Fallback to newest for now
+      newest: { createdAt: 'desc' as const },
     }
+    
+    const orderBy = orderByOptions[validatedFilters.sortBy || 'newest']
 
     // Execute queries in parallel
     const [reviews, total, stats] = await Promise.all([
