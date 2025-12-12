@@ -6,6 +6,43 @@ import type { ProductWithCategory, PaginatedProducts } from '@/types/product'
 import { PRODUCTS_PER_PAGE } from '@/lib/constants'
 
 /**
+ * Helper: Calculate average rating from review ratings
+ */
+function calculateAverageRating(ratings: number[]): number {
+  if (ratings.length === 0) return 0
+  const sum = ratings.reduce((acc, rating) => acc + rating, 0)
+  return Math.round((sum / ratings.length) * 10) / 10
+}
+
+/**
+ * Helper: Batch calculate review stats for multiple products
+ */
+async function batchCalculateReviewStats(
+  productIds: string[]
+): Promise<Map<string, { averageRating: number }>> {
+  if (productIds.length === 0) return new Map()
+
+  // Fetch all reviews for these products in one query
+  const reviews = await prisma.review.findMany({
+    where: { productId: { in: productIds } },
+    select: { productId: true, rating: true },
+  })
+
+  // Group by product and calculate stats
+  const statsMap = new Map<string, { averageRating: number }>()
+  
+  productIds.forEach((productId) => {
+    const productReviews = reviews.filter((r) => r.productId === productId)
+    const ratings = productReviews.map((r) => r.rating)
+    statsMap.set(productId, {
+      averageRating: calculateAverageRating(ratings),
+    })
+  })
+
+  return statsMap
+}
+
+/**
  * Get all products with optional filtering and pagination
  */
 export async function getProducts(
@@ -82,26 +119,14 @@ export async function getProducts(
       prisma.product.count({ where }),
     ])
 
-    // Calculate average rating for each product
-    const productsWithReviewStats = await Promise.all(
-      products.map(async (product) => {
-        const reviews = await prisma.review.findMany({
-          where: { productId: product.id },
-          select: { rating: true },
-        })
-        
-        const averageRating = reviews.length > 0
-          ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-          : 0
+    // Batch calculate review stats for all products
+    const productIds = products.map((p) => p.id)
+    const reviewStatsMap = await batchCalculateReviewStats(productIds)
 
-        return {
-          ...product,
-          reviewStats: {
-            averageRating: Math.round(averageRating * 10) / 10,
-          },
-        }
-      })
-    )
+    const productsWithReviewStats = products.map((product) => ({
+      ...product,
+      reviewStats: reviewStatsMap.get(product.id) || { averageRating: 0 },
+    }))
 
     return {
       products: productsWithReviewStats as ProductWithCategory[],
@@ -145,21 +170,12 @@ export async function getProduct(
 
     if (!product) return null
 
-    // Calculate average rating
-    const reviews = await prisma.review.findMany({
-      where: { productId: product.id },
-      select: { rating: true },
-    })
-
-    const averageRating = reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-      : 0
-
+    // Calculate average rating using helper
+    const reviewStatsMap = await batchCalculateReviewStats([product.id])
+    
     return {
       ...product,
-      reviewStats: {
-        averageRating: Math.round(averageRating * 10) / 10,
-      },
+      reviewStats: reviewStatsMap.get(product.id) || { averageRating: 0 },
     } as ProductWithCategory
   } catch (error) {
     console.error('Get product error:', error)
@@ -211,26 +227,14 @@ export async function getRelatedProducts(
       },
     })
 
-    // Calculate average rating for each product
-    const productsWithReviewStats = await Promise.all(
-      products.map(async (product) => {
-        const reviews = await prisma.review.findMany({
-          where: { productId: product.id },
-          select: { rating: true },
-        })
-        
-        const averageRating = reviews.length > 0
-          ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-          : 0
+    // Batch calculate review stats for all related products
+    const productIds = products.map((p) => p.id)
+    const reviewStatsMap = await batchCalculateReviewStats(productIds)
 
-        return {
-          ...product,
-          reviewStats: {
-            averageRating: Math.round(averageRating * 10) / 10,
-          },
-        }
-      })
-    )
+    const productsWithReviewStats = products.map((product) => ({
+      ...product,
+      reviewStats: reviewStatsMap.get(product.id) || { averageRating: 0 },
+    }))
 
     return productsWithReviewStats as ProductWithCategory[]
   } catch (error) {

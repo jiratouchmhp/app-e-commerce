@@ -50,11 +50,7 @@ export function ReviewForm({ productId, onSuccess, className = '' }: ReviewFormP
         setRating(0)
         setTitle('')
         setContent('')
-        
-        // Call onSuccess callback after a short delay to show success message
-        setTimeout(() => {
-          onSuccess?.()
-        }, 2000)
+        onSuccess?.()
       } else {
         setErrors({ submit: result.error || 'Failed to submit review' })
       }

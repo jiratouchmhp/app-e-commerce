@@ -37,7 +37,10 @@ export async function getProductReviews(
     const orderByOptions = {
       highest: { rating: 'desc' as const },
       lowest: { rating: 'asc' as const },
-      helpful: { createdAt: 'desc' as const }, // Fallback to newest for now
+      // Note: 'helpful' sort currently falls back to 'newest' as Prisma doesn't support
+      // direct ordering by relation count in this context. To implement proper sorting by
+      // helpful votes, we would need to use raw SQL or aggregate in application code.
+      helpful: { createdAt: 'desc' as const },
       newest: { createdAt: 'desc' as const },
     }
     
